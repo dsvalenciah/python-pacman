@@ -40,54 +40,87 @@ NFIL, NCOL         = 31, 28       # filas, columnas
 # %% se definen algunas variables globales
 marcador = 0
 
-# se define el diccionario con las vitaminas
-vitamina = {
-    'pos'   : ((3,1), (3,26), (23,1), (23,26)),   # posición (fila, columna)
-    'comida': [False, False, False, False],       # se comieron la vitamina
-    'imagen': ('pepa_peq','pepa_med','pepa_gra'), # imágenes
-    'tamaño': 2,                 # 0=pequeña, 1=mediana, 2=grande
-}
+class Criatura():
+    """definición de la clase criatura"""
+    def __init__(self, pos, dir, imagen, tic, toc, tiempo_entre_mov):
+        self.pos = pos
+        self.dir = dir
+        self.imagen = imagen
+        self.tic = tic
+        self.toc = toc
+        self.tiempo_entre_mov = tiempo_entre_mov
 
-# se define el diccionario pacman
-pacman = {
-    'pos'    : (23, 13),         # posición actual (fila, columna)
-    'dir'    : QUIETO,           # dirección hacia la que avanza
-    'imagen'       : ('pacman0','pacman1','pacman2'),  # imágenes del pacman
-    'invencible'   : False,      # se comió la vitamina
-    'boca_abierta' : 1,          # boca abierta 0, 1, 2, 3(1)
-    'tic'    : time.time(),      # para el cronómetro
-    'toc'    : 0,
-    'tiempo_entre_mov' : 1.0/10, # muevase 10 cuadros por segundo
-    'vidas'  : 3,
-}
 
-# se define el diccionario fantasma
-fantasma = {
-    'pos'    : (0, 0),          # posición actual (fila, columna)
-    'dir'    : ARRIBA,          # dirección hacia la que avanza
-    'imagen' : 0,               # imágenes del fantasma
-    'comido' : False,           # se lo comio el pacman: True/False
-    'tic'    : time.time(),     # para el cronómetro
-    'toc'    : 0,
-    'tiempo_entre_mov' : 1.0/8  # se mueve 8 cuadros/segundo
-}
+class PacMan():
+    """definición de la clase PacMan"""
+    def __init__(self):
+        Criatura.__init__(
+            self,
+            pos = (23, 13),  # posición actual (fila, columna)
+            dir = QUIETO,  # dirección hacia la que avanza
+            imagen = ('pacman0','pacman1','pacman2'),  # imágenes del pacman
+            tic = time.time(),  # para el cronómetro
+            toc = 0,
+            tiempo_entre_mov = 1.0/10,  # muevase 10 cuadros por segundo
+        )
+        self.invencible = False  # se comió la vitamina
+        self.boca_abierta = 1  # boca abierta 0, 1, 2, 3(1)
+        self.vidas = 3
 
-# crear los fantasmas
-blinky = fantasma.copy()
-blinky['pos']    = (14, 11)
-blinky['imagen'] = 'blinky'
 
-pinky = fantasma.copy()
-pinky['pos']    = (14, 13)
-pinky['imagen'] = 'pinky'
+class Fantasma():
+    """definición de la clase Fantasma"""
+    def __init__(self):
+        Criatura.__init__(
+            self,
+            pos = (0, 0),  # posición actual (fila, columna)
+            dir = ARRIBA,  # dirección hacia la que avanza
+            imagen = 0,  # imágenes del fantasma
+            tic = time.time(),  # para el cronómetro
+            toc = 0,
+            tiempo_entre_mov = 1.0/8  # se mueve 8 cuadros/segundo
+        )
+        self.comido = False  # se lo comio el pacman: True/False
 
-inky = fantasma.copy()
-inky['pos']    = (14, 15)
-inky['imagen'] = 'inky'
+class Vitamina():
+    """docstring for Vitamina"""
+    def __init__(self):
+        self.__pos = ((3,1), (3,26), (23,1), (23,26)) # posición (fila, columna)
+        self.comida = [False, False, False, False]  # se comieron la vitamina
+        self.tiempo_comido = [0, 0, 0, 0]  # tiempo en el que fue comida
+        self.comido_una_vez = [False, False, False, False]  # fue comido
+        # una vez
+        self.imagen = ('pepa_peq','pepa_med','pepa_gra')  # imágenes
+        self.tamano = 2  # 0=pequeña, 1=mediana, 2=grande
 
-clyde = fantasma.copy()
-clyde['pos']    = (13, 13)
-clyde['imagen'] = 'clyde'
+    def dar_pos(self, pos, indice):
+        self.__pos[indice] = pos
+
+    def obtener_pos(self):
+        return self.__pos
+
+# %% crear los fantasmas
+blinky = Fantasma()
+blinky.pos = (14, 11)
+blinky.imagen = 'blinky'
+
+pinky = Fantasma()
+pinky.pos = (14, 13)
+pinky.imagen = 'pinky'
+
+inky = Fantasma()
+inky.pos = (14, 15)
+inky.imagen = 'inky'
+
+clyde = Fantasma()
+clyde.pos = (13, 13)
+clyde.imagen = 'clyde'
+
+# %% crear vitamina
+vitamina = Vitamina()
+
+# %% crear pacman
+pacman = PacMan()
 
 # %% se define el tablero de juego
 mapa = [
@@ -155,23 +188,23 @@ def cargar_archivo_de_imagen(archivo):
 # %%
 def vitaminas_animar():
     # se selecciona el gráfico de la vitamina a utilizar
-    vitamina['tamaño'] += 1
-    if vitamina['tamaño'] == 4:
-        vitamina['tamaño'] = 0
+    vitamina.tamano += 1
+    if vitamina.tamano == 4:
+        vitamina.tamano = 0
 
-    if   vitamina['tamaño'] == 0: num_imagen_vitamina = 0
-    elif vitamina['tamaño'] == 1: num_imagen_vitamina = 1
-    elif vitamina['tamaño'] == 2: num_imagen_vitamina = 2
-    elif vitamina['tamaño'] == 3: num_imagen_vitamina = 1
+    if   vitamina.tamano == 0: num_imagen_vitamina = 0
+    elif vitamina.tamano == 1: num_imagen_vitamina = 1
+    elif vitamina.tamano == 2: num_imagen_vitamina = 2
+    elif vitamina.tamano == 3: num_imagen_vitamina = 1
 
-    imagen_vitamina = vitamina['imagen'][num_imagen_vitamina]
+    imagen_vitamina = vitamina.imagen[num_imagen_vitamina]
 
     # graficamos c/u de las vitaminas siempre y cuando no hayan sido comidas
     for i in range(4):
-        if not vitamina['comida'][i]:
+        if not vitamina.comida[i]:
             ventana.blit(imagen_ficha[imagen_vitamina],
-                           (XTAB + vitamina['pos'][i][1]*ANCHOCOL,
-                            YTAB + vitamina['pos'][i][0]*ANCHOFIL))
+                           (XTAB + vitamina.obtener_pos()[i][1]*ANCHOCOL,
+                            YTAB + vitamina.obtener_pos()[i][0]*ANCHOFIL))
 
 # %%
 def fantasma_animar(F, pos_anterior):
@@ -198,8 +231,8 @@ def fantasma_animar(F, pos_anterior):
 
     # se pone el fantasma en la nueva posición; ese "-3*ESC" es porque el
     # fantasma tiene un tamaño de 14x14 y la loseta uno de 8x8
-    fil_sgte, col_sgte = F['pos']
-    ventana.blit(imagen_ficha[F['imagen']], (XTAB + col_sgte*ANCHOCOL - 3*ESC,
+    fil_sgte, col_sgte = F.pos
+    ventana.blit(imagen_ficha[F.imagen], (XTAB + col_sgte*ANCHOCOL - 3*ESC,
                                              YTAB + fil_sgte*ANCHOFIL - 3*ESC))
 
 # %%
@@ -216,10 +249,10 @@ def fantama_generar_dir_aleatoria(F):
     else:
         # si el fantasma se puede mover en varias direcciones, se encuentra la
         # dirección contraria al movimiento actual y se descarta
-        if   F['dir'] == DERECHA:   dir_contraria = IZQUIERDA
-        elif F['dir'] == ARRIBA:    dir_contraria = ABAJO
-        elif F['dir'] == IZQUIERDA: dir_contraria = DERECHA
-        elif F['dir'] == ABAJO:     dir_contraria = ARRIBA
+        if   F.dir == DERECHA:   dir_contraria = IZQUIERDA
+        elif F.dir == ARRIBA:    dir_contraria = ABAJO
+        elif F.dir == IZQUIERDA: dir_contraria = DERECHA
+        elif F.dir == ABAJO:     dir_contraria = ARRIBA
 
         # remueva la dirección contraria porque no se puede devolver
         if puede_moverse_fantasma(F, dir_contraria):
@@ -231,25 +264,25 @@ def fantama_generar_dir_aleatoria(F):
 # %%
 def fantasma_mover(F):
     # se guardan las posiciones anteriores
-    fil_anterior, col_anterior = fil_sgte, col_sgte = F['pos']
+    fil_anterior, col_anterior = fil_sgte, col_sgte = F.pos
 
-    F['toc'] = time.time()
-    tiempo = F['toc'] - F['tic']
-    if tiempo > F['tiempo_entre_mov']:
+    F.toc = time.time()
+    tiempo = F.toc - F.tic
+    if tiempo > F.tiempo_entre_mov:
         # se genera la dirección de movimiento del fantasma
-        F['dir'] = fantama_generar_dir_aleatoria(F)
+        F.dir = fantama_generar_dir_aleatoria(F)
 
         # actualizar las posiciones siguientes
-        if   (F['dir'] == DERECHA)   and (col_anterior < NCOL-1): col_sgte += 1
-        elif (F['dir'] == ARRIBA)    and (fil_anterior > 0):      fil_sgte -= 1
-        elif (F['dir'] == IZQUIERDA) and (col_anterior > 0):      col_sgte -= 1
-        elif (F['dir'] == ABAJO)     and (fil_anterior < NFIL-1): fil_sgte += 1
+        if   (F.dir == DERECHA)   and (col_anterior < NCOL-1): col_sgte += 1
+        elif (F.dir == ARRIBA)    and (fil_anterior > 0):      fil_sgte -= 1
+        elif (F.dir == IZQUIERDA) and (col_anterior > 0):      col_sgte -= 1
+        elif (F.dir == ABAJO)     and (fil_anterior < NFIL-1): fil_sgte += 1
 
         # se actualiza la posición del fantasma
-        F['pos'] = (fil_sgte, col_sgte)
+        F.pos = (fil_sgte, col_sgte)
 
         # se actualiza el reloj interno del fantasma
-        F['tic'] = time.time()
+        F.tic = time.time()
 
     # se mueve el fantasma de la posicion anterior a la actual
     fantasma_animar(F, (fil_anterior, col_anterior))
@@ -263,20 +296,20 @@ def pacman_animar(pos_anterior):
                                 YTAB + fil*ANCHOFIL - 3*ESC))
 
     # se encuentra la figura a graficar
-    pacman['boca_abierta'] += 1
-    if pacman['boca_abierta'] == 4:
-        pacman['boca_abierta'] = 0
+    pacman.boca_abierta += 1
+    if pacman.boca_abierta == 4:
+        pacman.boca_abierta = 0
 
-    if   pacman['boca_abierta'] == 0: num_imagen_pacman = 0
-    elif pacman['boca_abierta'] == 1: num_imagen_pacman = 1
-    elif pacman['boca_abierta'] == 2: num_imagen_pacman = 2
-    elif pacman['boca_abierta'] == 3: num_imagen_pacman = 1
+    if   pacman.boca_abierta == 0: num_imagen_pacman = 0
+    elif pacman.boca_abierta == 1: num_imagen_pacman = 1
+    elif pacman.boca_abierta == 2: num_imagen_pacman = 2
+    elif pacman.boca_abierta == 3: num_imagen_pacman = 1
 
-    imagen_pacman = pacman['imagen'][num_imagen_pacman]
+    imagen_pacman = pacman.imagen[num_imagen_pacman]
 
     # se grafica el pacman en la nueva posición; ese "-3*ESC" es porque el
     # pacman tiene un tamaño de 14x14 y la loseta uno de 8x8
-    fil_sgte, col_sgte = pacman['pos']
+    fil_sgte, col_sgte = pacman.pos
     ventana.blit(imagen_ficha[imagen_pacman], (XTAB + col_sgte*ANCHOCOL - 3*ESC,
                                                YTAB + fil_sgte*ANCHOFIL - 3*ESC))
 
@@ -285,11 +318,11 @@ def pacman_mover(dir):
     global marcador
 
     # se guardan las posiciones anteriores
-    fil_anterior, col_anterior = fil_sgte, col_sgte = pacman['pos']
+    fil_anterior, col_anterior = fil_sgte, col_sgte = pacman.pos
 
-    pacman['toc'] = time.time()
-    tiempo = pacman['toc'] - pacman['tic']
-    if tiempo > pacman['tiempo_entre_mov']:
+    pacman.toc = time.time()
+    tiempo = pacman.toc - pacman.tic
+    if tiempo > pacman.tiempo_entre_mov:
         # actualizar las posiciones siguientes
         if   (dir == DERECHA)   and (col_anterior < NCOL-1): col_sgte += 1
         elif (dir == ARRIBA)    and (fil_anterior > 0):      fil_sgte -= 1
@@ -308,15 +341,17 @@ def pacman_mover(dir):
                 marcador += 50
                 mapa[fil_sgte][col_sgte] = ' '
                 for i in range(4):
-                    if vitamina['pos'][i] == (fil_sgte,col_sgte):
-                        vitamina['comida'][i] = True
+                    if vitamina.obtener_pos()[i] == (fil_sgte,col_sgte):
+                        vitamina.comida[i] = True
+                        vitamina.comido_una_vez[i] = True
+                        vitamina.tiempo_comido[i] = time.time()
 
             # se actualiza la posición y dirección del fantasma
-            pacman['pos'] = (fil_sgte, col_sgte)
-            pacman['dir'] = dir
+            pacman.pos = (fil_sgte, col_sgte)
+            pacman.dir = dir
 
             # se actualiza el reloj interno del pacman
-            pacman['tic'] = time.time()
+            pacman.tic = time.time()
 
     # se mueve el pacman de la posicion anterior a la actual
     pacman_animar((fil_anterior, col_anterior))
@@ -330,7 +365,7 @@ def pacman_mover(dir):
 
 # %%
 def puede_moverse_pacman(dir):
-    fil, col = pacman['pos']
+    fil, col = pacman.pos
     # actualizar las posiciones
     if   (dir == DERECHA)   and (col < NCOL-1): col += 1
     elif (dir == ARRIBA)    and (fil > 0):      fil -= 1
@@ -341,7 +376,7 @@ def puede_moverse_pacman(dir):
 
 # %%
 def puede_moverse_fantasma(F, dir):
-    fil, col = F['pos']
+    fil, col = F.pos
     # actualizar las posiciones
     if   (dir == DERECHA)   and (col < NCOL-1): col += 1
     elif (dir == ARRIBA)    and (fil > 0):      fil -= 1
@@ -349,6 +384,13 @@ def puede_moverse_fantasma(F, dir):
     elif (dir == ABAJO)     and (fil < NFIL-1): fil += 1
 
     return mapa[fil][col] in 'M .o' # muro fantasma, vacío, punto, vitamina
+
+# %%
+def vitamina_comida():
+    for i, x in enumerate(vitamina.comido_una_vez):
+        if x and time.time() - vitamina.tiempo_comido[i] >= 5:
+            print("Ya pasaron 5 segundos")
+            vitamina.comido_una_vez[i] = False
 
 # %%###### ########## ######## PROGRAMA PRINCIPAL ######## ########## #########
 # %% Se convierte el laberinto a una lista
@@ -436,7 +478,10 @@ Canal_Musica_Fondo.play(sonido['opening_song'])
 mapa[12][13] = mapa[12][14] = '#'
 
 # %% bucle principal
-while (pacman['vidas'] > 0) and (not salirse_del_juego):
+while (pacman.vidas > 0) and (not salirse_del_juego):
+    # cambiar imagenes dependiendo de si vitamina es comida o no
+    vitamina_comida()
+
     # se está ejecutando la introducción?
     if haciendo_la_introduccion:
         if (time.time() - inicio_intro_tic) > duracion_intro:
@@ -452,7 +497,7 @@ while (pacman['vidas'] > 0) and (not salirse_del_juego):
     if(puede_moverse_pacman(proxima_dir)):
         pacman_mover(proxima_dir)
     else:
-        pacman_mover(pacman['dir'])
+        pacman_mover(pacman.dir)
 
     # mover los fantasmas
     for i in range(4):
